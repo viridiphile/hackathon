@@ -1,0 +1,10 @@
+services:
+  hackathon-web-app:
+    container_name: hackathon-web-app
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "4041:5000"
+    restart: always
+    
