@@ -36,7 +36,7 @@ def after_request(response):
     response.headers["Pragma"] = "no-cache"
     return response
 
-@app.route("/portfolio")
+@app.route("/account")
 @login_required
 def portfolio():
     """Show portfolio of stocks"""
@@ -50,7 +50,7 @@ def portfolio():
     for row in transactions:
         cash_total += row["total"]
 
-    return render_template("portfolio.html", transactions = transactions, cash = cash, total = cash_total)
+    return render_template("account.html")
 
 @app.route("/")
 def index():
@@ -58,7 +58,7 @@ def index():
     return render_template("index.html")
     """ name1=stocks1["name"], price1=stocks1["price"], symbol1=stocks1["symbol"], name2=stocks2["name"], price2=stocks2["price"], symbol2=stocks2["symbol"], name3=stocks3["name"], price3=stocks3["price"], symbol3=stocks3["symbol"], name4=stocks4["name"], price4=stocks4["price"], symbol4=stocks4["symbol"] """
 
-@app.route("/buy", methods=["GET", "POST"])
+@app.route("/loan", methods=["GET", "POST"])
 @login_required
 def buy():
     """Buy shares of stock"""
@@ -91,20 +91,20 @@ def buy():
 
         flash("The purchase has been made!")
 
-        return redirect("/portfolio")
+        return redirect("/account")
 
     else:
         return render_template("buy.html")
 
 
-@app.route("/history")
+@app.route("/mortgage")
 @login_required
 def history():
     """Show history of transactions"""
     user_id = session["user_id"]
     transactions = db.execute("SELECT * FROM transactions WHERE user_id = ?", user_id)
 
-    return render_template("history.html", transactions=transactions)
+    return render_template("history.html")
 
 
 @app.route("/login", methods=["GET", "POST"])
@@ -134,7 +134,7 @@ def login():
         session["user_id"] = rows[0]["id"]
 
         # Redirect user to home page
-        return redirect("/portfolio")
+        return redirect("/account")
 
     # User reached route via GET (as by clicking a link or via redirect)
     else:
@@ -152,7 +152,7 @@ def logout():
     return redirect("/")
 
 
-@app.route("/quote", methods=["GET", "POST"])
+@app.route("/oracle", methods=["GET", "POST"])
 @login_required
 def quote():
     """Get stock quote."""
@@ -164,30 +164,8 @@ def quote():
 
     """Odds are you’ll want to create two new templates (e.g., quote.html and quoted.html). When a user visits /quote via GET, render one of those templates, inside of which should be an HTML form that submits to /quote via POST. In response to a POST, quote can render that second template, embedding within it one or more values from lookup."""
 
-    
-
-    if request.method == "POST":
-        # symbol = request.form.get("symbol")
-
-        # if not symbol:
-        #     return apology("Must input a symbol")
-
-        # stocks = lookup(symbol.upper())
-
-        # if stocks == None:
-        #     return apology("Symbol does not exist")
-        return render_template("quoted.html")# from backend to frontend
-    else :
-        # symbol = request.args.get('symbol') 
-
-        # if not symbol:
-        #     return render_template("quote.html")
-
-        # stocks = lookup(symbol.upper())
-
-        # if stocks == None:
-        #     return apology("Symbol does not exist")
-        return render_template("quoted.html")
+    return render_template("oracle.html")# from backend to frontend
+   
     
 
         
@@ -256,12 +234,12 @@ def register():
         # once we are registered
         # start session, we go to website
         session["user_id"] = new_user
-        return redirect("/portfolio")
+        return redirect("/account")
     else:
         return render_template("register.html")
 
 
-@app.route("/sell", methods=["GET", "POST"])
+@app.route("/autoloan", methods=["GET", "POST"])
 @login_required
 def sell():
     """Sell shares of stock"""
@@ -305,13 +283,13 @@ def sell():
 
         flash("The sell has been made!")
 
-        return redirect("/portfolio")
+        return redirect("/account")
 
     else:
         user_id = session["user_id"]
         user_symbols = db.execute("SELECT symbol FROM transactions WHERE user_id = ? GROUP BY symbol HAVING SUM(shares) > 0", user_id)
 
-        return render_template("sell.html", symbols=[row["symbol"] for row in user_symbols])
+        return render_template("autoloan.html")
 
 if __name__ == '__main__':
     app.run(debug=True)
