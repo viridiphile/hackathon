@@ -194,3 +194,10 @@ nav .navbar-brand .green {
     margin-top: 20px; /* Margin for the submit button */
     align-self: flex-start; /* Align button to the start */
 }
+
+.container{
+    clear: both;
+    text-align: left; /* Align text to the left */
+    max-width: 800px; /* Optional: Limit the width for better readability */
+    margin: 0 auto; /* Center the container itself but keep the text left-aligned */
+}
