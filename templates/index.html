@@ -1,7 +1,7 @@
 {% extends "layout.html" %}
 
 {% block title %}
-
+Главная
 {% endblock %}
 
 {% block main %}
@@ -11,22 +11,6 @@
         <p>Наша цель — сделать процесс кредитования максимально простым и легким.</p>
         <button id="get-started">Подать заявку</button>
     </div>
-    <img id="main-pic" src="../static/uu.png" alt="Nice picture">
+    <img id="main-pic" src="../static/main.png" alt="Vector image of finance">
 </div>
-<div class="second-section">
-    <h2>Лучшие предложения</h2>
-    <div class="images">
-        {% for row in selected %}
-        <div class="image-text">
-            <p id="name"> {{ row["name"] }}({{ row["symbol"] }}) </p>
-            <p id="price"> {{ row["price"] | usd }} </p>
-        </div>
-        {% endfor %}
-    </div>
-</div>
-<div class="container">
-
-</div>
-
-<script src="../static/js/script.js"></script>
 {% endblock %}

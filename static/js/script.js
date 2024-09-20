@@ -1,7 +1,7 @@
 let register = document.querySelector("#get-started");
 register.addEventListener("click", function () {
     window.location.href = "/register";
-})
+});
 
 function toggleChatbot() {
     var chatbotContainer = document.getElementById('chatbotContainer');
@@ -13,16 +13,49 @@ function toggleChatbot() {
 }
 
 function sendMessage() {
-    var input = document.getElementById('chatInput');
-    var message = input.value.trim();
-    if (message) {
-        var chatbotBody = document.getElementById('chatbotBody');
-        var newMessage = document.createElement('div');
-        newMessage.textContent = 'You: ' + message;
-        chatbotBody.appendChild(newMessage);
-        chatbotBody.scrollTop = chatbotBody.scrollHeight;  // Scroll to the bottom
-        input.value = '';  // Clear input field
+    const inputField = document.getElementById("chatInput");
+    const message = inputField.value.trim();
 
-        // Add your backend chat response logic here, e.g., AJAX request to Flask backend
+    if (message) {
+        // Append user message to chatbot body
+        appendMessage("You: " + message);
+        
+        // Clear the input field
+        inputField.value = "";
+
+        // Append loading message
+        const loadingMessage = appendMessage("Бот: ...");
+
+        // Fetch response from your chatbot API
+        fetch("/chat", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({ message: message })
+        })
+        .then(response => {
+            if (!response.ok) {
+                throw new Error("Остутствует подключение к Интернету");
+            }
+            return response.json();
+        })
+        .then(data => {
+            // Replace loading message with actual bot response
+            loadingMessage.textContent = "Бот: " + data.reply;
+        })
+        .catch(error => {
+            console.error("Ошибка:", error);
+            loadingMessage.textContent = "Бот: Извините, попробуйте позже.";
+        });
     }
+}
+
+function appendMessage(text) {
+    const chatbotBody = document.getElementById("chatbotBody");
+    const messageElement = document.createElement("div");
+    messageElement.textContent = text;
+    chatbotBody.appendChild(messageElement);
+    chatbotBody.scrollTop = chatbotBody.scrollHeight; // Scroll to the bottom
+    return messageElement; // Return the message element for later reference
 }

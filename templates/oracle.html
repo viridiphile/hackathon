@@ -5,11 +5,25 @@
 {% endblock %}
 
 {% block main %}
-    <h2>Quote</h2>
-    <form action="/quote" method="post">
-        <div class="mb-3">
-            <input autocomplete="off" autofocus class="form-control mx-auto w-auto" name="symbol" placeholder="Input a stock symbol" type="text">
+    <h2>Выберите тип кредитования</h2>
+    <div class="container">
+        <div class="block">
+            <a href="loan_form.html" class="block-link">
+                <h2>Денежный кредит</h2>
+                <p>Получите наличные средства на любые нужды с выгодными условиями и низкими процентными ставками.</p>
+            </a>
         </div>
-        <button class="btn btn-primary" type="submit">Quote</button>
-    </form>
+        <div class="block">
+            <a href="autoloan_form.html" class="block-link">
+                <h2>Автокредит</h2>
+                <p>Купите новый или подержанный автомобиль с гибкими условиями и привлекательными процентными ставками.</p>
+            </a>
+        </div>
+        <div class="block">
+            <a href="mortgage_form.html" class="block-link">
+                <h2>Ипотека</h2>
+                <p>Оформите ипотечный кредит на покупку жилья с комфортными сроками и конкурентными условиями.</p>
+            </a>
+        </div>
+    </div>    
 {% endblock %}

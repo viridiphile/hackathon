@@ -1,0 +1,29 @@
+{% extends "layout.html" %}
+
+{% block title %}
+    Quote
+{% endblock %}
+
+{% block main %}
+    <h2>Выберите тип кредитования</h2>
+    <div class="container">
+        <div class="block">
+            <a href="loan_form.html" class="block-link">
+                <h2>Form 1</h2>
+                <p>Description for Form 1.</p>
+            </a>
+        </div>
+        <div class="block">
+            <a href="autoloan_form.html" class="block-link">
+                <h2>Form 2</h2>
+                <p>Description for Form 2.</p>
+            </a>
+        </div>
+        <div class="block">
+            <a href="mortgage_form.html" class="block-link">
+                <h2>Form 3</h2>
+                <p>Description for Form 3.</p>
+            </a>
+        </div>
+    </div>
+{% endblock %}

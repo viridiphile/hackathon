@@ -1,0 +1,41 @@
+{% extends "layout.html" %}
+
+{% block title %}
+    Заявка на ипотеку
+{% endblock %}
+
+{% block main %}
+<form action="/submit-business" method="POST" class="horizontal-form">
+    <div class="form-group">
+        <label for="company">Название компании</label>
+        <input type="text" id="company" name="company" required>
+    </div>
+
+    <div class="form-group">
+        <label for="contact">Контактное лицо</label>
+        <input type="text" id="contact" name="contact" required>
+    </div>
+
+    <div class="form-group">
+        <label for="email">Электронная почта</label>
+        <input type="email" id="email" name="email" required>
+    </div>
+
+    <div class="form-group">
+        <label for="phone">Номер телефона</label>
+        <input type="tel" id="phone" name="phone" required>
+    </div>
+
+    <div class="form-group">
+        <label for="website">Вебсайт</label>
+        <input type="url" id="website" name="website">
+    </div>
+
+    <div class="form-group">
+        <label for="details">Дополнительные детали</label>
+        <textarea id="details" name="details" rows="4"></textarea>
+    </div>
+
+    <button type="submit">Подать заявку</button>
+</form>
+{% endblock %}

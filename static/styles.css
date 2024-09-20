@@ -3,11 +3,6 @@
     padding: 0;
 }
 
-/* 
-html, body {
-    width: 100%;
-} */
-
 .title-orange{
     color: #fea607;
 }
@@ -22,17 +17,10 @@ nav .navbar-brand {
     margin-bottom: 0;
 }
 
-.second-section,
-.second-section .images,
-.second-section .image-text,
 .first-section {
     display : flex;
     margin  : 0 auto;
     /* width: 80%; */
-}
-
-/*  */
-.first-section {
     justify-content: space-around;
     align-items    : center;
 }
@@ -50,14 +38,7 @@ nav .navbar-brand {
     /* color      : #F9FAF8; */
 }
 
-/* 
-.first-section .secondary-text-links p {
-    color    : #E5E7EB;
-} */
-
-.first-section .secondary-text-links button,
-.buy,
-.sell {
+.first-section .secondary-text-links button{
     margin-top      : 17px;
     margin-right    : 15px;
     background-color: #3882F6;
@@ -77,8 +58,6 @@ nav .navbar-brand {
 }
 
 .first-section .secondary-text-links a,
-.buy a,
-.sell a,
 #get-started {
     color          : #fff;
     text-decoration: none;
@@ -88,54 +67,6 @@ nav .navbar-brand {
 
 .first-section img {
     width: 400px;
-
-}
-
-/* Second section */
-.second-section {
-    display        : flex;
-    flex-direction : column;
-    align-content  : space-around;
-    justify-content: space-evenly;
-    align-items    : flex-start;
-    height         : 268px;
-}
-
-.second-section h2 {
-    font-size  : 36px;
-    font-weight: bolder;
-    color      : #1F2937;
-    padding    : 10px;
-    margin     : 0 auto;
-}
-
-.second-section .images {
-    justify-content: space-between;
-}
-
-.second-section .image-text {
-    font-size       : 18px;
-    margin          : 10px;
-    padding         : 5px 10px;
-    background-color: #3882F6;
-    color           : #fff;
-    border-radius   : 10px;
-    box-shadow      : 5px 5px 10px #888888;
-}
-
-/* 
-.second-section .subtext{
-    text-align: center;
-} */
-
-.second-section #name {
-    font-weight  : 600;
-    padding-right: 10px;
-}
-
-.second-section #price {
-    font-weight: 500;
-    color      : #41EC72;
 }
 
 #have-an-account {
@@ -170,11 +101,11 @@ nav .navbar-brand .green {
     bottom: 20px;
     right: 20px;
     width: 300px;
-    max-height: 400px;
+    height: 700px;
     background-color: white;
     border-radius: 10px;
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-    overflow: hidden;
+    overflow: scroll;
     display: none;
     flex-direction: column;
     z-index: 1000;
@@ -234,4 +165,32 @@ nav .navbar-brand .green {
     height: 50px;
     cursor: pointer;
     z-index: 1000;
+}
+
+/* Style for the horizontal form */
+.horizontal-form {
+    display: flex;
+    flex-wrap: wrap; /* Allows items to wrap to the next line if necessary */
+    gap: 20px; /* Space between form groups */
+    margin: 20px 0; /* Margin around the form */
+}
+
+/* Style for each form group */
+.form-group {
+    flex: 1; /* Allow groups to take equal space */
+    min-width: 200px; /* Minimum width for each input group */
+    display: flex;
+    flex-direction: column; /* Stack label and input vertically */
+}
+
+/* Style for labels */
+.form-group label {
+    margin-bottom: 5px; /* Space between label and input */
+    font-weight: bold; /* Make labels bold */
+}
+
+/* Style for buttons */
+.horizontal-form button {
+    margin-top: 20px; /* Margin for the submit button */
+    align-self: flex-start; /* Align button to the start */
 }

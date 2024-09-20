@@ -1,24 +1,25 @@
 import os
 
 from cs50 import SQL
-from flask import Flask, flash, redirect, render_template, request, session
+from flask import Flask, flash, redirect, render_template, request, session, jsonify
 from flask_session import Session
 from tempfile import mkdtemp
+import requests
 from werkzeug.security import check_password_hash, generate_password_hash
 import datetime
 import re
 import random
+from flask_cors import CORS
+import openai
 
-from helpers import apology, login_required, lookup, usd, lookup_batch
+from helpers import apology, login_required
 
 # Configure application
 app = Flask(__name__)
+CORS(app)
 
 # Ensure templates are auto-reloaded
 app.config["TEMPLATES_AUTO_RELOAD"] = True
-
-# Custom filter
-app.jinja_env.filters["usd"] = usd
 
 # Configure session to use filesystem (instead of signed cookies)
 app.config["SESSION_PERMANENT"] = False
@@ -26,7 +27,28 @@ app.config["SESSION_TYPE"] = "filesystem"
 Session(app)
 
 # Configure CS50 Library to use SQLite database
-db = SQL("sqlite:///finance.db")
+db = SQL("sqlite:///hackathon.db")
+
+# Create tables
+db.execute('''
+    CREATE TABLE IF NOT EXISTS users (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        full_name TEXT NOT NULL,
+        iin TEXT NOT NULL,
+        email TEXT NOT NULL UNIQUE,
+        password TEXT NOT NULL
+    )
+''')
+
+db.execute('''
+    CREATE TABLE IF NOT EXISTS requests (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        user_id INTEGER,
+        type TEXT,
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY(user_id) REFERENCES users(id)
+    )
+''')
 
 @app.after_request
 def after_request(response):
@@ -36,75 +58,74 @@ def after_request(response):
     response.headers["Pragma"] = "no-cache"
     return response
 
-@app.route("/account")
-@login_required
-def portfolio():
-    """Show portfolio of stocks"""
-    user_id = session["user_id"]
-
-    transactions = db.execute("SELECT symbol, name, SUM(shares) AS shares, price, price * shares AS total FROM transactions WHERE user_id = ?  GROUP BY symbol", user_id)
-
-    cash = db.execute("SELECT cash FROM users WHERE id = ?", user_id)[0]["cash"]
-
-    cash_total = cash
-    for row in transactions:
-        cash_total += row["total"]
-
-    return render_template("account.html")
 
 @app.route("/")
 def index():
 
     return render_template("index.html")
-    """ name1=stocks1["name"], price1=stocks1["price"], symbol1=stocks1["symbol"], name2=stocks2["name"], price2=stocks2["price"], symbol2=stocks2["symbol"], name3=stocks3["name"], price3=stocks3["price"], symbol3=stocks3["symbol"], name4=stocks4["name"], price4=stocks4["price"], symbol4=stocks4["symbol"] """
 
-@app.route("/loan", methods=["GET", "POST"])
+
+@app.route("/account")
 @login_required
-def buy():
+def account():
+    """Show portfolio of stocks"""
+    user_id = session["user_id"]
+    
+    return render_template("account.html")
+
+
+@app.route("/oracle", methods=["GET", "POST"])
+@login_required
+def oracle():
+    """Get stock quote."""
+    # 2
+    # Allows to look up a stock's current price
+    # input of stock's symbol required, html name="symbol"
+    # submit input via "post" to "/quote"
+    # 2 new templates quote.html, quoted.html
+
+    """Odds are you’ll want to create two new templates (e.g., quote.html and quoted.html). When a user visits /quote via GET, render one of those templates, inside of which should be an HTML form that submits to /quote via POST. In response to a POST, quote can render that second template, embedding within it one or more values from lookup."""
+
+    return render_template("oracle.html")# from backend to frontend
+
+
+@app.route("/loan-form", methods=["GET", "POST"])
+@login_required
+def loan():
     """Buy shares of stock"""
     # 3
     if request.method == "POST":
-        symbol = request.form.get("symbol")
-
-        if not symbol:
-            return apology("Must input a symbol")
-
-        symbol = symbol.upper()
-       
-        try:
-            shares = int(shares)
-        except:
-            return apology("That ain't a number of shares")
-
-        if shares <= 0:
-            return apology("Must be a positive amount")
 
         user_id = session["user_id"]
-        cash_available = db.execute("SELECT cash FROM users WHERE id = ?", user_id)[0]["cash"]
-
-        transaction_value = price * shares
-
-        # Money check
-        if cash_available < transaction_value:
-            return apology("Insufficient funds")
-        updated_cash = cash_available - transaction_value
 
         flash("The purchase has been made!")
 
         return redirect("/account")
 
     else:
-        return render_template("buy.html")
+        return render_template("loan_form.html")
 
 
-@app.route("/mortgage")
+@app.route("/autoloan-form", methods=["GET", "POST"])
 @login_required
-def history():
+def autoloan():
+    """Sell shares of stock"""
+    if request.method == "POST":
+      
+        return redirect("/account")
+
+    else:
+        user_id = session["user_id"]
+        return render_template("autoloan_form.html")
+
+
+@app.route("/mortgage-form")
+@login_required
+def mortgage():
     """Show history of transactions"""
     user_id = session["user_id"]
-    transactions = db.execute("SELECT * FROM transactions WHERE user_id = ?", user_id)
 
-    return render_template("history.html")
+    return render_template("mortgage_form.html")
 
 
 @app.route("/login", methods=["GET", "POST"])
@@ -113,22 +134,21 @@ def login():
     # Forget any user_id
     session.clear()
 
-    # User reached route via POST (as by submitting a form via POST)
     if request.method == "POST":
-        # Ensure username was submitted
-        if not request.form.get("username"):
-            return apology("must provide username", 403)
+        # Ensure email was submitted
+        if not request.form.get("email"):
+            return apology("must provide email", 403)
 
         # Ensure password was submitted
         elif not request.form.get("password"):
             return apology("must provide password", 403)
 
-        # Query database for username
-        rows = db.execute("SELECT * FROM users WHERE username = ?", request.form.get("username"))
+        # Query database for the email
+        rows = db.execute("SELECT * FROM users WHERE email = ?", request.form.get("email"))
 
-        # Ensure username exists and password is correct
-        if len(rows) != 1 or not check_password_hash(rows[0]["hash"], request.form.get("password")):
-            return apology("invalid username and/or password", 403)
+        # Ensure email exists and password is correct
+        if len(rows) != 1 or not check_password_hash(rows[0]["password"], request.form.get("password")):
+            return apology("invalid email and/or password", 403)
 
         # Remember which user has logged in
         session["user_id"] = rows[0]["id"]
@@ -136,10 +156,9 @@ def login():
         # Redirect user to home page
         return redirect("/account")
 
-    # User reached route via GET (as by clicking a link or via redirect)
     else:
         return render_template("login.html")
-
+    
 
 @app.route("/logout")
 def logout():
@@ -152,49 +171,26 @@ def logout():
     return redirect("/")
 
 
-@app.route("/oracle", methods=["GET", "POST"])
-@login_required
-def quote():
-    """Get stock quote."""
-    # 2
-    # Allows to look up a stock's current price
-    # input of stock's symbol required, html name="symbol"
-    # submit input via "post" to "/quote"
-    # 2 new templates quote.html, quoted.html
-
-    """Odds are you’ll want to create two new templates (e.g., quote.html and quoted.html). When a user visits /quote via GET, render one of those templates, inside of which should be an HTML form that submits to /quote via POST. In response to a POST, quote can render that second template, embedding within it one or more values from lookup."""
-
-    return render_template("oracle.html")# from backend to frontend
-   
-    
-
-        
-
-
 @app.route("/register", methods=["GET", "POST"])
 def register():
     """Register user"""
-    # 1
-
-    # Registering via form
-    # Input a username, in html name="username", if empty or taken send an apology
-    # input a password, in html name="password", then the same password in html="confirmation"
-    # render an apology is block is blank or they dont match
-
-    # submit form via post
-    # insert a new user into users, storing a hash of the user's password, not the password itself
-    # we want to create new template register.html thats similar to login.html
-
-    # when u implement this you will
     if request.method == "POST":
-        # temporary for comfort use variables then change to requests
-        username = request.form.get("username")
+        # Get the form inputs
+        full_name = request.form.get("full_name")
+        iin = request.form.get("iin")
+        email = request.form.get("email")
         password = request.form.get("password")
         confirmation = request.form.get("confirmation")
 
-        # check for blank
-        if not username:
-            return apology("Username required")
+        # Check for blank inputs
+        if not full_name:
+            return apology("Full name required")
+        
+        if not iin:
+            return apology("IIN required")
+
+        if not email:
+            return apology("Email required")
 
         if not password:
             return apology("Password required")
@@ -205,18 +201,14 @@ def register():
         if password != confirmation:
             return apology("Passwords do not match")
 
+        # Password validation (same logic as before)
         check = True
-        #re.search("[a-z0-9A-Z\s]", password)
         while check:
-            if (len(password) < 8 or len(password) > 12):
+            if len(password) < 8:
                 break
             elif not re.search("[a-z]", password):
                 break
             elif not re.search("[0-9]", password):
-                break
-            elif not re.search("[A-Z]", password):
-                break
-            elif re.search("\\s", password):
                 break
             else:
                 check = False
@@ -224,72 +216,52 @@ def register():
         if check:
             return apology("Password does not meet requirements")
 
+        # Hash the password
         hash = generate_password_hash(password)
 
-        # register user in db
+        # Insert user into the new 'users' table of 'hackathon' database
         try:
-            new_user = db.execute("INSERT INTO users (username, hash) VALUES (?, ?)", username, hash)
+            new_user = db.execute("INSERT INTO users (full_name, iin, email, password) VALUES (?, ?, ?, ?)",
+                                  full_name, iin, email, hash)
         except:
-            return apology("Username is taken")
-        # once we are registered
-        # start session, we go to website
+            return apology("Email is taken")
+
+        # Start session
         session["user_id"] = new_user
         return redirect("/account")
+    
     else:
         return render_template("register.html")
 
 
-@app.route("/autoloan", methods=["GET", "POST"])
-@login_required
-def sell():
-    """Sell shares of stock"""
-    if request.method == "POST":
-        # symbol = request.form.get("symbol")
+# Set your OpenAI API key
+openai.api_key = os.getenv("OPENAI_API_KEY") 
 
-        # if not symbol:
-        #     return apology("Must input a symbol")
+@app.route("/chat", methods=["POST"])
+def chat():
+    try:
+        request_data = request.get_json()
+        user_message = request_data.get("message", "")  # Извлекаем сообщение из тела запроса
 
-        # stocks = lookup(symbol.upper())
+        response = requests.post('https://chatbot.tim-space.kz/chat', json={
+            # "message": "Привет, меня зовут Галина! Мой ИИН: 12345797697, у меня чистая кредитная история. Могу ли я взять кредит?"
+            "message": user_message
+        })
 
-        # if stocks == None:
-        #     return apology("Symbol does not exist")
+        # Логируем текст ответа для отладки
+        print(response.text)
 
-        shares = request.form.get("shares")
+        if response.status_code == 200:
+            # Извлекаем ответ от AI из вложенного словаря
+            bot_response = response.json().get("data", {}).get("responseFromAi", "Нет ответа от AI")
+        else:
+            bot_response = f"Ошибка: {response.status_code}"
 
-        try:
-            shares = int(shares)
-        except:
-            return apology("That ain't a number of shares")
+    except Exception as e:
+        bot_response = f"Произошла ошибка: {str(e)}"
+        
+    return jsonify({"reply": bot_response})
 
-        if shares <= 0:
-            return apology("Must be a positive amount")
-
-        user_id = session["user_id"]
-
-        # share_name = stocks["name"]
-        # price = stocks["price"]
-        # transaction_value = shares * price
-
-        user_shares = db.execute("SELECT shares FROM transactions WHERE user_id = ? AND symbol = ? GROUP BY symbol", user_id, symbol)[0]["shares"]
-        user_cash = db.execute("SELECT cash FROM users WHERE id = ?", user_id)[0]["cash"]
-        if shares > user_shares:
-            return apology("Insufficient amount of shares")
-
-        updated_cash = user_cash + transaction_value
-
-        db.execute("UPDATE users SET cash = ? WHERE id = ?", updated_cash, user_id)
-
-        db.execute("INSERT INTO transactions (user_id, symbol, name, shares, price, type) VALUES (?, ?, ?, ?, ?, ?)", user_id, symbol, share_name, (-1)*shares, transaction_value, 'sell')
-
-        flash("The sell has been made!")
-
-        return redirect("/account")
-
-    else:
-        user_id = session["user_id"]
-        user_symbols = db.execute("SELECT symbol FROM transactions WHERE user_id = ? GROUP BY symbol HAVING SUM(shares) > 0", user_id)
-
-        return render_template("autoloan.html")
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    app.run(host="0.0.0.0", port=5000, debug=True)
